@@ -1,34 +1,60 @@
 pipeline {
     agent any
+
+    environment {
+        NODEJS_HOME = tool name: 'NodeJS 14', type: 'NodeJS'
+        PATH = "${NODEJS_HOME}/bin:${env.PATH}"
+    }
+
     stages {
         stage('Checkout') {
-             steps {
-                // Clone the Git repository to the Jenkins workspace
-                checkout scm
+            steps {
+                git 'https://github.com/shameelaz/devops-project.git'
             }
         }
+
         stage('Install Dependencies') {
             steps {
-                // Install Node.js dependencies using npm
-                sh 'npm install'
+                script {
+                    sh 'npm install'
+                }
             }
         }
+
         stage('Build') {
             steps {
-                sh 'npm install'
+                script {
+                    sh 'npm run build'
+                }
             }
         }
+
         stage('Test') {
             steps {
-                sh './jenkins/scripts/test.sh'
+                script {
+                    sh 'npm test'
+                }
             }
         }
-        stage('Deliver') {
+
+        stage('Deploy') {
             steps {
-                sh './jenkins/scripts/deliver.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh './jenkins/scripts/kill.sh'
+                script {
+                    sh 'npm run deploy'
+                }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline completed.'
+        }
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
